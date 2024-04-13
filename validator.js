@@ -80,8 +80,66 @@ exports.ApiAuthentication = [
 
 
 exports.Login = [
-    check('UserName', 'UserName id is required').trim().notEmpty(),
+    check('Email', 'Email is required').trim().notEmpty(),
     check('Password', 'Password is required').trim().notEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            var error_string = InvalidParameter(errors.array());
+            var response = {
+                "status": "0",
+                "message": error_string,
+                "data": {}
+            };
+            console.log(req.body);
+            return res.status(200).send(response);
+        }
+        next();
+    },
+]
+
+
+exports.UserList = [
+    //check('Password', 'Password is required').trim().notEmpty(),
+    check('Role', 'Role id is required').trim().notEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            var error_string = InvalidParameter(errors.array());
+            var response = {
+                "status": "0",
+                "message": error_string,
+                "data": {}
+            };
+            console.log(req.body);
+            return res.status(200).send(response);
+        }
+        next();
+    },
+]
+
+exports.AddUpdateUser = [
+    //check('Password', 'Password is required').trim().notEmpty(),
+    check('Role', 'Role id is required').trim().notEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            var error_string = InvalidParameter(errors.array());
+            var response = {
+                "status": "0",
+                "message": error_string,
+                "data": {}
+            };
+            console.log(req.body);
+            return res.status(200).send(response);
+        }
+        next();
+    },
+]
+
+exports.DeleteUser = [
+    check('UserId', 'UserId is required').trim().notEmpty(),
+    check('Role', 'Role is required').trim().notEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

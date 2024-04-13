@@ -1,6 +1,7 @@
 const express = require('express')
 var router = express.Router();
 const app = express()
+const cors = require('cors');
 const port = 3000
 const validator = require("./validator");
 const Login = require("./Controller/login.controller");
@@ -10,10 +11,13 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true, parameterLimit: 1
 
 
 app.use(express.json()); // Body parsing middleware
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
 router.post('/Login', validator.ApiAuthentication, validator.Login, Login.Login);
-router.post('/UserList', validator.ApiAuthentication, Login.UserList);
+router.post('/UserList',  Login.UserList);
+router.post('/AddUpdateUser', Login.AddUpdateUser);
+router.post('/DeleteUser', Login.DeleteUser);
 
 app.use('/', router);
 
