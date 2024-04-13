@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { check, validationResult, body } = require('express-validator');
 const _ = require('lodash');
+const Library = require('./helper/Library');
 
 const API_VERSION = "1.0";
 
@@ -15,8 +16,6 @@ const InvalidParameter = function (errors) {
 
 exports.ApiAuthentication = [
     /* below code comment because send encrypted request */
-    check('Request', 'Request data is required').trim().notEmpty(),
-
     async (req, res, next) => {
 
         /* Validation - START */
@@ -39,18 +38,50 @@ exports.ApiAuthentication = [
             'data': {},
         };
 
+        let ServiceName = req.url.replace('/', '');
+        req.body.ServiceName = ServiceName.toString();
+        console.log(!allowedDefaultService.includes(ServiceName), req.body);
+        if (!allowedDefaultService.includes(ServiceName)) {
+            if (!req.body.Token || !parseInt(req.body.UserId)) {
+                return res.status(200).send(response);
+            }
+
+            let verificationResult = await Library.verify_Token(req.body.Token); // jwt token varify
+            console.log(verificationResult.data.data);
+            if (verificationResult.data.data.UserId != req.body.UserId) {
+                response = {
+                    'status': '2',
+                    'message': 'Session Expire',
+                    'data': {},
+                }
+                return res.status(200).send(response); // Authentication Fail
+            }
+
+            if (verificationResult.success) {
+                return next();
+            }
+            else {
+                response = {
+                    'status': '2',
+                    'message': 'Session Expire',
+                    'data': {},
+                }
+                return res.status(200).send(response); // Authentication Fail
+            }
+        } else {
+            return next();
+        }
 
         /* Encrypt request convert into Decrypt - END */
-        return res.status(200).send(await Library.EncryptDecryptResponse(req.body, response)); // Authentication Fail
+        return res.status(200).send(response); // Authentication Fail
     },
 ]
 
 
 
 exports.Login = [
-    check('Token', 'Token is required').trim().notEmpty(),
-    check('EmployeeEmailId', 'Employee email id is required').trim().notEmpty(),
-    check('EmployeePassword', 'Employee password is required').trim().notEmpty(),
+    check('UserName', 'UserName id is required').trim().notEmpty(),
+    check('Password', 'Password is required').trim().notEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -60,7 +91,8 @@ exports.Login = [
                 "message": error_string,
                 "data": {}
             };
-            return res.status(200).send(Library.ResponseFormat(req.body, response));
+            console.log(req.body);
+            return res.status(200).send(response);
         }
         next();
     },
