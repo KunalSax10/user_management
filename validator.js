@@ -15,9 +15,7 @@ const InvalidParameter = function (errors) {
 }
 
 exports.ApiAuthentication = [
-    /* below code comment because send encrypted request */
     async (req, res, next) => {
-        /* Validation - START */
         console.log(req.files);
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

@@ -27,13 +27,11 @@ Model.Login = async (request, files, callback) => {
             var TokenData = Library.generate_Token(Data[0]);
             if (TokenData.status == "1") {
                 response["Token"] = TokenData.accessToken;
-
-                // Assuming the login photo is uploaded along with other files
                 let loginPhoto;
                 if (files && files['LoginPhoto']) {
-                    loginPhoto = files['LoginPhoto'] ? files['LoginPhoto'][0].path : ''; // Retrieve the path of the uploaded login photo
+                    loginPhoto = files['LoginPhoto'] ? files['LoginPhoto'][0].path : '';
                 }
-                await Library.LoginHistoryStore(Data[0], 1, loginPhoto); // Pass the login photo path to the LoginHistoryStore function
+                await Library.LoginHistoryStore(Data[0], 1, loginPhoto);
             } else {
                 throw new Error("Something went wrong. Please try again.");
             }
@@ -43,17 +41,16 @@ Model.Login = async (request, files, callback) => {
         response.status = '1';
         response.data = Data[0];
 
-        console.log("Login response:", response); // Add this log to verify the response
+        console.log("Login response:", response);
 
-        callback(null, response); // Ensure that the callback is invoked with the response object
+        callback(null, response);
     } catch (error) {
         console.error("error:", error);
-        // Handle the error appropriately, e.g., return an error response to the callback
         const errorResponse = {
             "status": "0",
             "message": error.message
         };
-        console.error("Error response:", errorResponse); // Log the error response
+        console.error("Error response:", errorResponse);
         return callback(errorResponse, null);
     }
 };

@@ -31,12 +31,9 @@ Library.verify_Token = async (token) => {
             throw new Error('Invalid token format');
         }
 
-        // console.log("Received token:", token);
-
         let jwtSecretKey = process.env.JWT_SECRET_KEY;
         const decoded = await jwt.verify(token, jwtSecretKey);
 
-        // console.log("Verification successful", decoded);
         result.success = true;
         result.data = decoded;
     } catch (error) {
@@ -53,7 +50,7 @@ Library.GetIpAddress = (req) => {
         req.socket.remoteAddress ||
         req.connection.socket.remoteAddress;
     ip = ip.split(',')[0];
-    ip = ip.split(':').slice(-1)[0]; //in case the ip returned in a format: "::ffff:146.xxx.xxx.xxx"
+    ip = ip.split(':').slice(-1)[0];
     return ip;
 }
 
