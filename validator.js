@@ -17,8 +17,8 @@ const InvalidParameter = function (errors) {
 exports.ApiAuthentication = [
     /* below code comment because send encrypted request */
     async (req, res, next) => {
-
         /* Validation - START */
+        console.log(req.files);
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             response = {
@@ -40,21 +40,23 @@ exports.ApiAuthentication = [
 
         let ServiceName = req.url.replace('/', '');
         req.body.ServiceName = ServiceName.toString();
-        console.log(!allowedDefaultService.includes(ServiceName), req.body);
+
+        var Ip_Address_Dynamic = await Library.GetIpAddress(req);
+        req.body.Ip_Address_Dynamic = Ip_Address_Dynamic;
         if (!allowedDefaultService.includes(ServiceName)) {
             if (!req.body.Token || !parseInt(req.body.UserId)) {
                 return res.status(200).send(response);
             }
 
-            let verificationResult = await Library.verify_Token(req.body.Token); // jwt token varify
-            console.log(verificationResult.data.data);
+            let verificationResult = await Library.verify_Token(req.body.Token);
+
             if (verificationResult.data.data.UserId != req.body.UserId) {
                 response = {
                     'status': '2',
                     'message': 'Session Expire',
                     'data': {},
                 }
-                return res.status(200).send(response); // Authentication Fail
+                return res.status(200).send(response);
             }
 
             if (verificationResult.success) {
@@ -66,14 +68,12 @@ exports.ApiAuthentication = [
                     'message': 'Session Expire',
                     'data': {},
                 }
-                return res.status(200).send(response); // Authentication Fail
+                return res.status(200).send(response);
             }
         } else {
             return next();
         }
-
-        /* Encrypt request convert into Decrypt - END */
-        return res.status(200).send(response); // Authentication Fail
+        return res.status(200).send(response);
     },
 ]
 
@@ -100,7 +100,7 @@ exports.Login = [
 
 
 exports.UserList = [
-    //check('Password', 'Password is required').trim().notEmpty(),
+    check('UserId', 'UserId is required').trim().notEmpty(),
     check('Role', 'Role id is required').trim().notEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
@@ -119,7 +119,7 @@ exports.UserList = [
 ]
 
 exports.AddUpdateUser = [
-    //check('Password', 'Password is required').trim().notEmpty(),
+    check('UserId', 'UserId is required').trim().notEmpty(),
     check('Role', 'Role id is required').trim().notEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);

@@ -8,7 +8,7 @@ const Model = {};
 
 
 
-Model.Login = async (request, callback) => {
+Model.Login = async (request, files, callback) => {
     var response = {
         "status": "0",
         "message": "Something is wrong."
@@ -18,8 +18,7 @@ Model.Login = async (request, callback) => {
         const UserName = request.Email;
         const Password = request.Password;
 
-        let query = `select UserId,FullName,Email,Mobile,Role
-        from mst_userlist where (Mobile=? OR Email=?) AND Password=? AND Status =1`;
+        let query = `SELECT UserId, FullName, Email, Mobile, Role FROM mst_userlist WHERE (Mobile=? OR Email=?) AND Password=? AND Status = 1`;
         const Data = await sqlhelper.fetchData(query, [UserName, UserName, Password]);
 
         if (Data.length == 0) {
@@ -28,8 +27,14 @@ Model.Login = async (request, callback) => {
             var TokenData = Library.generate_Token(Data[0]);
             if (TokenData.status == "1") {
                 response["Token"] = TokenData.accessToken;
-            }
-            else {
+
+                // Assuming the login photo is uploaded along with other files
+                let loginPhoto;
+                if (files && files['LoginPhoto']) {
+                    loginPhoto = files['LoginPhoto'] ? files['LoginPhoto'][0].path : ''; // Retrieve the path of the uploaded login photo
+                }
+                await Library.LoginHistoryStore(Data[0], 1, loginPhoto); // Pass the login photo path to the LoginHistoryStore function
+            } else {
                 throw new Error("Something went wrong. Please try again.");
             }
         }
@@ -54,12 +59,12 @@ Model.Login = async (request, callback) => {
 };
 
 
+
 Model.UserList = async (request, callback) => {
     var response = {
         "status": "0",
         "message": "Something is wrong."
     };
-
     try {
         let query = `select UserId,FullName,FirstName,LastName,Email,Mobile,Role,Address,Gender,Password
         from mst_userlist`;
@@ -72,7 +77,6 @@ Model.UserList = async (request, callback) => {
         callback(null, response);
     } catch (error) {
         console.error("error =====> ", error);
-        // Handle the error appropriately, e.g., return an error response to the callback
         const errorResponse = {
             "status": "0",
             "message": error.message
@@ -86,10 +90,13 @@ Model.AddUpdateUser = async (request, callback) => {
         "status": "0",
         "message": "Something is wrong."
     };
-    const requestData = request.Request;
+    const requestData = request;
     try {
+        const UpdateUserId = request.UpdateUserId;
+        const Ip_Address_Dynamic = request.Ip_Address_Dynamic;
+        const UserId = request.UserId;
         const userData = {
-            UserId:requestData.UserId || 0,
+            UserId: UpdateUserId,
             FirstName: requestData.FirstName || '',
             LastName: requestData.LastName || '',
             Role: requestData.Role || 'user',
@@ -99,25 +106,24 @@ Model.AddUpdateUser = async (request, callback) => {
             Password: requestData.Password || '',
             Gender: requestData.Gender || 'Male',
             EntryDate: new Date(),
-            EntryBy: requestData.EntryBy || 'Admin', 
-            EntryIp: requestData.EntryIp || '127.0.0.1' 
+            EntryBy: UserId || 'Admin',
+            EntryIp: Ip_Address_Dynamic
         };
-        if (requestData.UserId != 0) {
-            const updateResult = await sqlhelper.updateData('mst_userlist', userData, { UserId: request.UserId });
+        if (UpdateUserId) {
+            const updateResult = await sqlhelper.updateData('mst_userlist', userData, { UserId: UpdateUserId });
             if (updateResult) {
                 response.message = 'User updated successfully';
                 response.status = '1';
-                response.user = userData; // Include the updated user data in the response
+                response.user = userData;
             } else {
                 response.message = 'Failed to update user';
             }
         } else {
-            // Insert the user into the database
             const insertResult = await sqlhelper.insertData('mst_userlist', userData);
             if (insertResult) {
                 response.message = 'User added successfully';
                 response.status = '1';
-                response.data = userData; 
+                response.data = userData;
             } else {
                 response.message = 'Failed to add user';
             }
@@ -126,7 +132,6 @@ Model.AddUpdateUser = async (request, callback) => {
         callback(null, response);
     } catch (error) {
         console.error("error =====> ", error);
-        // Handle the error appropriately, e.g., return an error response to the callback
         const errorResponse = {
             "status": "0",
             "message": error.message
@@ -140,17 +145,14 @@ Model.DeleteUser = async (request, callback) => {
         "status": "0",
         "message": "Something is wrong."
     };
-
     try {
-        const  UserId  = request;
-        const deleteResult = await sqlhelper.delete('mst_userlist', { UserId });
-
-        if (deleteResult.affectedRows > 0) {
-            response.message = 'User deleted successfully';
-            response.status = '1';
-        } else {
-            response.message = 'User with the provided UserId does not exist';
+        const UserId = request.UserId;
+        const where = {
+            'UserId': UserId,
         }
+        await sqlhelper.delete('mst_userlist', where);
+        response.message = 'User deleted successfully';
+        response.status = '1';
 
         callback(null, response);
     } catch (error) {
@@ -162,5 +164,7 @@ Model.DeleteUser = async (request, callback) => {
         return callback(errorResponse, null);
     }
 };
+
+
 
 module.exports = Model;

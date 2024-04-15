@@ -6,7 +6,7 @@ var IS_USE_DYNAMIC_TOKEN = process.env.IS_USE_DYNAMIC_TOKEN;
 
 exports.Login = async (req, res) => {
     try {
-        Model.Login(req.body, (error, resData) => {
+        Model.Login(req.body, req.files, (error, resData) => {
             if (error) {
                 error.Token = req.body?.Token || '';
                 res.status(200).send(error);
