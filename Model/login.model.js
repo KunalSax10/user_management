@@ -104,7 +104,8 @@ Model.AddUpdateUser = async (request, callback) => {
             Gender: requestData.Gender || 'Male',
             EntryDate: new Date(),
             EntryBy: UserId || 'Admin',
-            EntryIp: Ip_Address_Dynamic
+            EntryIp: Ip_Address_Dynamic,
+            Status: 1
         };
         if (UpdateUserId) {
             const updateResult = await sqlhelper.updateData('mst_userlist', userData, { UserId: UpdateUserId });
